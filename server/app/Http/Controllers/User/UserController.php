@@ -47,9 +47,9 @@ class UserController extends Controller
             'new_password' => [
                 'required',
                 'min:8',
-                'regex:/[A-Z]/',      // must contain at least one uppercase letter
-                'regex:/[0-9]/',      // must contain at least one digit
-                'regex:/[@$!%*#?&]/', // must contain a special character
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*#?&]/',
             ],
             'new_password_confirmation' => 'required|same:new_password',
         ]);
