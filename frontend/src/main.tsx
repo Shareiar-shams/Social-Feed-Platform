@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import App from './App'
 import Feed from './pages/Feed'
+import NotFound from './pages/NotFound'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import GuestRoute from './components/GuestRoute'
@@ -42,6 +43,8 @@ createRoot(document.getElementById('root')!).render(
               } 
             />
           </Route>
+          {/* 404 - Catch all undefined routes */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
