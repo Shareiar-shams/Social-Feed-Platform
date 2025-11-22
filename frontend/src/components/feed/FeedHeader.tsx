@@ -145,7 +145,7 @@ export default function FeedHeader() {
               <hr />
               <ul className="_nav_dropdown_list">
                 <li className="_nav_dropdown_list_item">
-                  <Link to="/settings" className="_nav_dropdown_link">
+                  <Link to="/profile" className="_nav_dropdown_link">
                     <div className="_nav_drop_info">
                       <span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="19" fill="none" viewBox="0 0 18 19">
