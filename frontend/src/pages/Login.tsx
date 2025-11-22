@@ -1,7 +1,86 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import AuthLayout from './AuthLayout';
+import { useAuth } from '../contexts/AuthContext';
+import { validateEmail } from '../utils/RegistrationValidation';
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate email
+    const emailValidation = validateEmail(formData.email);
+    if (!emailValidation.isValid) {
+      newErrors.email = emailValidation.message!;
+    }
+
+    // Validate password
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await login(formData);
+      // Wait a moment for state to update, then redirect to feed page
+      setTimeout(() => {
+        navigate('/feed', { replace: true });
+      }, 100);
+    } catch (error: any) {
+      // Handle login errors
+      setErrors(prev => ({
+        ...prev,
+        general: error.message || 'Login failed. Please check your credentials.'
+      }));
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <AuthLayout variant="login">
       <div className="col-xl-8 col-lg-8 col-md-12 col-sm-12">
@@ -22,18 +101,64 @@ export default function Login() {
             <img src="/assets/images/google.svg" alt="Image" className="_google_img" /> <span>Or sign-in with google</span>
           </button>
           <div className="_social_login_content_bottom_txt _mar_b40"> <span>Or</span></div>
-          <form className="_social_login_form">
+
+          {errors.general && (
+            <div style={{ 
+              padding: '10px', 
+              marginBottom: '20px', 
+              backgroundColor: '#fee', 
+              color: '#c33', 
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}>
+              {errors.general}
+            </div>
+          )}
+
+          <form className="_social_login_form" onSubmit={handleSubmit}>
             <div className="row">
               <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                 <div className="_social_login_form_input _mar_b14">
                   <label className="_social_login_label _mar_b8">Email</label>
-                  <input type="email" className="form-control _social_login_input" />
+                  <input 
+                    type="email" 
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="form-control _social_login_input" 
+                  />
+                  {errors.email && (
+                    <small style={{ color: '#c33', fontSize: '12px' }}>{errors.email}</small>
+                  )}
                 </div>
               </div>
               <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                <div className="_social_login_form_input _mar_b14">
+                <div className="_social_login_form_input _mar_b14" style={{ position: 'relative' }}>
                   <label className="_social_login_label _mar_b8">Password</label>
-                  <input type="password" className="form-control _social_login_input" />
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="form-control _social_login_input" 
+                    style={{ paddingRight: '40px' }}
+                  />
+                  <FontAwesomeIcon 
+                    icon={showPassword ? faEyeSlash : faEye} 
+                    onClick={togglePasswordVisibility}
+                    style={{
+                      position: 'absolute',
+                      right: '15px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      cursor: 'pointer',
+                      color: '#666',
+                      marginTop: '12px'
+                    }}
+                  />
+                  {errors.password && (
+                    <small style={{ color: '#c33', fontSize: '12px' }}>{errors.password}</small>
+                  )}
                 </div>
               </div>
             </div>
@@ -53,7 +178,13 @@ export default function Login() {
             <div className="row">
               <div className="col-lg-12 col-md-12 col-xl-12 col-sm-12">
                 <div className="_social_login_form_btn _mar_t40 _mar_b60">
-                  <button type="button" className="_social_login_form_btn_link _btn1">Login now</button>
+                  <button 
+                    type="submit" 
+                    className="_social_login_form_btn_link _btn1"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Logging in...' : 'Login now'}
+                  </button>
                 </div>
               </div>
             </div>
