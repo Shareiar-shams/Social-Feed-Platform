@@ -1,8 +1,24 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 
 export default function FeedHeader() {
   const [notifyOpen, setNotifyOpen] = useState(false)
+  const [profileDropOpen, setProfileDropOpen] = useState(false)
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/login', { replace: true })
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
+
+  const userName = user ? `${user.first_name} ${user.last_name}` : 'User'
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light _header_nav _padd_t10">
       <div className="container _custom_container">
@@ -104,27 +120,32 @@ export default function FeedHeader() {
               <img src="/assets/images/profile.png" alt="Image" className="_nav_profile_img" />
             </div>
             <div className="_header_nav_dropdown">
-              <p className="_header_nav_para">Dylan Field</p>
-              <button id="_profile_drop_show_btn" className="_header_nav_dropdown_btn _dropdown_toggle" type="button">
+              <p className="_header_nav_para">{userName}</p>
+              <button 
+                id="_profile_drop_show_btn" 
+                className="_header_nav_dropdown_btn _dropdown_toggle" 
+                type="button"
+                onClick={() => setProfileDropOpen(v => !v)}
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" fill="none" viewBox="0 0 10 6">
                   <path fill="#112032" d="M5 5l.354.354L5 5.707l-.354-.353L5 5zm4.354-3.646l-4 4-.708-.708 4-4 .708.708zm-4.708 4l-4-4 .708-.708 4 4-.708.708z" />
                 </svg>
               </button>
             </div>
-            <div id="_prfoile_drop" className="_nav_profile_dropdown _profile_dropdown">
+            <div id="_prfoile_drop" className={`_nav_profile_dropdown _profile_dropdown ${profileDropOpen ? 'show' : ''}`}>
               <div className="_nav_profile_dropdown_info">
                 <div className="_nav_profile_dropdown_image">
                   <img src="/assets/images/profile.png" alt="Image" className="_nav_drop_img" />
                 </div>
                 <div className="_nav_profile_dropdown_info_txt">
-                  <h4 className="_nav_dropdown_title">Dylan Field</h4>
+                  <h4 className="_nav_dropdown_title">{userName}</h4>
                   <a href="profile.html" className="_nav_drop_profile">View Profile</a>
                 </div>
               </div>
               <hr />
               <ul className="_nav_dropdown_list">
                 <li className="_nav_dropdown_list_item">
-                  <a href="#0" className="_nav_dropdown_link">
+                  <Link to="/settings" className="_nav_dropdown_link">
                     <div className="_nav_drop_info">
                       <span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="19" fill="none" viewBox="0 0 18 19">
@@ -133,12 +154,12 @@ export default function FeedHeader() {
                       </span>
                       Settings
                     </div>
-                    <button type="submit" className="_nav_drop_btn_link">
+                    <span className="_nav_drop_btn_link">
                       <svg xmlns="http://www.w3.org/2000/svg" width="6" height="10" fill="none" viewBox="0 0 6 10">
                         <path fill="#112032" d="M5 5l.354.354L5.707 5l-.353-.354L5 5zM1.354 9.354l4-4-.708-.708-4 4 .708.708zm4-4.708l-4-4-.708.708 4 4 .708-.708z" opacity=".5"/>
                       </svg>
-                    </button>
-                  </a>
+                    </span>
+                  </Link>
                 </li>
                 <li className="_nav_dropdown_list_item">
                   <a href="#0" className="_nav_dropdown_link">
@@ -151,15 +172,10 @@ export default function FeedHeader() {
                       </span>
                       Help & Support
                     </div>
-                    <button type="submit" className="_nav_drop_btn_link">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="6" height="10" fill="none" viewBox="0 0 6 10">
-                        <path fill="#112032" d="M5 5l.354.354L5.707 5l-.353-.354L5 5zM1.354 9.354l4-4-.708-.708-4 4 .708.708zm4-4.708l-4-4-.708.708 4 4 .708-.708z" opacity=".5"/>
-                      </svg>
-                    </button>
                   </a>
                 </li>
                 <li className="_nav_dropdown_list_item">
-                  <a href="#0" className="_nav_dropdown_link">
+                  <button onClick={handleLogout} className="_nav_dropdown_link" style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>
                     <div className="_nav_drop_info">
                       <span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" fill="none" viewBox="0 0 19 19">
@@ -168,12 +184,7 @@ export default function FeedHeader() {
                       </span>
                       Log Out
                     </div>
-                    <button type="submit" className="_nav_drop_btn_link">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="6" height="10" fill="none" viewBox="0 0 6 10">
-                        <path fill="#112032" d="M5 5l.354.354L5.707 5l-.353-.354L5 5zM1.354 9.354l4-4-.708-.708-4 4 .708.708zm4-4.708l-4-4-.708.708 4 4 .708-.708z" opacity=".5"/>
-                      </svg>
-                    </button>
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>
