@@ -18,7 +18,19 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return response()->json(['message' => 'Registered successfully']);
+        // Create a Sanctum token for the user
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Registered successfully',
+            'user' => [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+            ],
+            'token' => $token
+        ], 201);
     }
 
     public function login(Request $request)
@@ -34,12 +46,26 @@ class AuthController extends Controller
             return response()->json(['message' => 'Wrong credentials'], 401);
         }
 
-        return response()->json(['message' => 'Logged in', 'user' => $user]);
+        // Create a Sanctum token for the user
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Logged in successfully',
+            'user' => [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+            ],
+            'token' => $token
+        ]);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        auth()->guard('web')->logout();
-        return response()->json(['message' => 'Logged out']);
+        // Revoke the current user's token
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Logged out successfully']);
     }
 }
