@@ -44,7 +44,7 @@ createRoot(document.getElementById('root')!).render(
               } 
             />
             <Route 
-              path="settings" 
+              path="profile" 
               element={
                 <ProtectedRoute>
                   <Settings />
