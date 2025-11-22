@@ -6,18 +6,44 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import App from './App'
 import Feed from './pages/Feed'
+import { AuthProvider } from './contexts/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
+import GuestRoute from './components/GuestRoute'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />}>
-          <Route index element={<Navigate to="/login" replace />} />
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
-          <Route path="feed" element={<Feed />} />
-        </Route>
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<App />}>
+            <Route index element={<Navigate to="/login" replace />} />
+            <Route 
+              path="login" 
+              element={
+                <GuestRoute>
+                  <Login />
+                </GuestRoute>
+              } 
+            />
+            <Route 
+              path="register" 
+              element={
+                <GuestRoute>
+                  <Register />
+                </GuestRoute>
+              } 
+            />
+            <Route 
+              path="feed" 
+              element={
+                <ProtectedRoute>
+                  <Feed />
+                </ProtectedRoute>
+              } 
+            />
+          </Route>
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 )
