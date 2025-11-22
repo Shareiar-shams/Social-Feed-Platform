@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import App from './App'
 import Feed from './pages/Feed'
+import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -39,6 +40,14 @@ createRoot(document.getElementById('root')!).render(
               element={
                 <ProtectedRoute>
                   <Feed />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="settings" 
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               } 
             />
