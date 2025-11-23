@@ -7,12 +7,12 @@ use Illuminate\Support\Facades\Storage;
 
 class PostService
 {
-    public function showAllPosts($request)
+    public function showAllPosts($request, $perPage = 10)
     {
         return Post::visibleTo($request->user())
             ->withPostRelations()
             ->latest()
-            ->get();
+            ->paginate($perPage);
     }
 
     public function createPost($request)

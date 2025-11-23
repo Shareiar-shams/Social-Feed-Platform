@@ -21,7 +21,10 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        $posts = $this->postService->showAllPosts($request);
+        $perPage = $request->query('per_page', 10);
+        $page = $request->query('page', 1);
+
+        $posts = $this->postService->showAllPosts($request, $perPage);
 
         return response()->json($posts);
     }
