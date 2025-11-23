@@ -30,7 +30,7 @@ api.interceptors.response.use(
   }
 );
 
-export interface Post {
+interface Post {
   id: number;
   user_id: number;
   content: string;
@@ -47,6 +47,8 @@ export interface Post {
   likes_count?: number;
   likes?: any[];
 }
+
+export type { Post };
 
 export interface CreatePostData {
   content: string;
