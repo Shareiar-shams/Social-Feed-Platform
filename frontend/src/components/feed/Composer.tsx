@@ -110,11 +110,14 @@ export default function Composer({ onPostCreated }: ComposerProps) {
     setIsSubmitting(true);
 
     try {
-      await postService.createPost({
+      // Create the post
+      const response = await postService.createPost({
         content: content.trim(),
         visibility,
         image: selectedImage || undefined,
       });
+
+      const createdPost = response.data; // make sure your service returns Axios response
 
       // Success toast
       Swal.fire({
@@ -139,10 +142,35 @@ export default function Composer({ onPostCreated }: ComposerProps) {
         fileInputRef.current.value = '';
       }
 
-      // Notify parent component
-      if (onPostCreated) {
-        onPostCreated();
+      // Map backend response to Post format
+      if (response.post) {
+        const postData: Post = {
+          id: response.post.id,
+          content: response.post.content,
+          visibility: response.post.visibility,
+          created_at: response.post.created_at,
+          updated_at: response.post.updated_at,
+          user_id: response.post.user_id,
+          user: response.post.user
+            ? {
+                id: response.post.user.id,
+                first_name: response.post.user.first_name,
+                last_name: response.post.user.last_name,
+                email: response.post.user.email,
+              }
+            : {
+                id: 0,
+                first_name: 'Unknown',
+                last_name: 'User',
+                email: '',
+              },
+          image: response.post.image || null,
+        };
+
+        // Notify parent to render instantly
+        onPostCreated(postData);
       }
+
     } catch (err: any) {
       Swal.fire({
         toast: true,
@@ -159,6 +187,7 @@ export default function Composer({ onPostCreated }: ComposerProps) {
     } finally {
       setIsSubmitting(false);
     }
+
   };
 
   return (
