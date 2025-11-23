@@ -19,6 +19,11 @@ export default function FeedHeader() {
 
   const userName = user ? `${user.first_name} ${user.last_name}` : 'User'
 
+  // Generate avatar from first name
+  const getAvatarInitial = (firstName: string) => {
+    return firstName.charAt(0).toUpperCase();
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light _header_nav _padd_t10">
       <div className="container _custom_container">
@@ -117,7 +122,25 @@ export default function FeedHeader() {
           </ul>
           <div className="_header_nav_profile">
             <div className="_header_nav_profile_image">
-              <img src="/assets/images/profile.png" alt="Image" className="_nav_profile_img" />
+              <div
+                className="_nav_profile_img"
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  border: '2px solid #fff',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                {user ? getAvatarInitial(user.first_name) : 'U'}
+              </div>
             </div>
             <div className="_header_nav_dropdown">
               <p className="_header_nav_para">{userName}</p>
@@ -135,7 +158,25 @@ export default function FeedHeader() {
             <div id="_prfoile_drop" className={`_nav_profile_dropdown _profile_dropdown ${profileDropOpen ? 'show' : ''}`}>
               <div className="_nav_profile_dropdown_info">
                 <div className="_nav_profile_dropdown_image">
-                  <img src="/assets/images/profile.png" alt="Image" className="_nav_drop_img" />
+                  <div
+                    className="_nav_drop_img"
+                    style={{
+                      width: '50px',
+                      height: '50px',
+                      borderRadius: '50%',
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '20px',
+                      fontWeight: 'bold',
+                      border: '2px solid #fff',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {user ? getAvatarInitial(user.first_name) : 'U'}
+                  </div>
                 </div>
                 <div className="_nav_profile_dropdown_info_txt">
                   <h4 className="_nav_dropdown_title">{userName}</h4>
