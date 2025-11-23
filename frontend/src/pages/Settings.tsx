@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FeedHeader, MobileMenu, MobileBottomNav, LeftSidebar, RightSidebar } from '../components/feed';
 import { useAuth } from '../contexts/AuthContext';
 import { validatePassword, validateRequired } from '../utils/RegistrationValidation';
+import { userService } from '../services/userService';
 
 export default function Settings() {
   const { user } = useAuth();
@@ -94,30 +95,14 @@ export default function Settings() {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/user/update-profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(profileData)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Update failed');
-      }
-
-      const data = await response.json();
+      const data = await userService.updateProfile(profileData);
       // Update user in localStorage
       localStorage.setItem('auth_user', JSON.stringify(data.user));
       setSuccessMessage('Profile updated successfully!');
     } catch (error: any) {
       setErrors(prev => ({
         ...prev,
-        general: error.message || 'Failed to update profile'
+        general: error.response?.data?.message || error.message || 'Failed to update profile'
       }));
     } finally {
       setIsSubmitting(false);
@@ -135,22 +120,7 @@ export default function Settings() {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/user/update-password`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(passwordData)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Password update failed');
-      }
-
+      await userService.updatePassword(passwordData);
       setSuccessMessage('Password updated successfully!');
       setPasswordData({
         current_password: '',
@@ -160,7 +130,7 @@ export default function Settings() {
     } catch (error: any) {
       setErrors(prev => ({
         ...prev,
-        general: error.message || 'Failed to update password'
+        general: error.response?.data?.message || error.message || 'Failed to update password'
       }));
     } finally {
       setIsSubmitting(false);
