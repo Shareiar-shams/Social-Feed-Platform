@@ -92,6 +92,13 @@ export default function Feed() {
     fetchPosts(false);
   }, [fetchPosts]);
 
+  // When post is updated
+  const handlePostUpdate = useCallback((updatedPost: Post) => {
+    setPosts(prev => prev.map(post =>
+      post.id === updatedPost.id ? updatedPost : post
+    ));
+  }, []);
+
   // When post is deleted
   const handlePostDelete = useCallback((postId: number) => {
     setPosts(prev => prev.filter(post => post.id !== postId));
@@ -131,6 +138,7 @@ export default function Feed() {
                       <TimelinePost
                         key={post.id}
                         post={post}
+                        onPostUpdate={handlePostUpdate}
                         onPostDelete={handlePostDelete}
                       />
                     ))}
