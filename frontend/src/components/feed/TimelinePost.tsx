@@ -47,10 +47,10 @@ export default function TimelinePost({ post, onPostUpdate, onPostDelete }: Timel
       </div>
 
       {/* Post Stats */}
-      <PostStats />
+      <PostStats post={post} />
 
       {/* Post Actions */}
-      <PostActions />
+      <PostActions post={post} onPostUpdate={onPostUpdate} />
 
       {/* Post Comments */}
       <PostComments />
