@@ -87,10 +87,9 @@ export default function Feed() {
   }, [handleScroll]);
 
   // When new post is created
-  const handlePostCreated = useCallback(() => {
-    setPage(1); // reset to first page
-    fetchPosts(false);
-  }, [fetchPosts]);
+  const handlePostCreated = useCallback((newPost: Post) => {
+    setPosts(prev => [newPost, ...prev]);
+  }, []);
 
   // When post is updated
   const handlePostUpdate = useCallback((updatedPost: Post) => {
