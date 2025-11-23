@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import type { User, LoginCredentials, RegisterCredentials } from '../types/auth';
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Setup global error handler for 401 responses
   useEffect(() => {
-    const handleUnauthorized = (event: CustomEvent) => {
+    const handleUnauthorized = () => {
       handleTokenExpired();
     };
 
