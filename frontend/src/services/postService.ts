@@ -45,7 +45,15 @@ interface Post {
     email: string;
   };
   likes_count?: number;
-  likes?: any[];
+  likes?: Array<{
+    id: number;
+    user_id: number;
+    user?: {
+      id: number;
+      first_name: string;
+      last_name: string;
+    };
+  }>;
 }
 
 export type { Post };
