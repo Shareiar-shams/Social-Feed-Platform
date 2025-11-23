@@ -1,56 +1,184 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import type { Post } from "../../services/postService";
+import { postService } from "../../services/postService";
+import { useAuth } from "../../contexts/AuthContext";
 
-export default function TimelinePost() {
+interface TimelinePostProps {
+  post: Post;
+  onPostDelete?: (postId: number) => void;
+}
+
+export default function TimelinePost({ post, onPostDelete }: TimelinePostProps) {
+  const { user } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const isOwner = user?.id === post.user_id;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Generate avatar from first name
+  const getAvatarInitial = (firstName: string) => {
+    return firstName.charAt(0).toUpperCase();
+  };
+
+  // Format time ago
+  const getTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const postDate = new Date(dateString);
+    const diffInMinutes = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  };
+
+  const handleDelete = async () => {
+    if (!isOwner || isDeleting) return;
+
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      setIsDeleting(true);
+      try {
+        await postService.deletePost(post.id);
+        onPostDelete?.(post.id);
+      } catch (error) {
+        console.error('Failed to delete post:', error);
+        alert('Failed to delete post. Please try again.');
+      } finally {
+        setIsDeleting(false);
+        setShowDropdown(false);
+      }
+    }
+  };
+
+  const toggleDropdown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Dropdown toggled, current state:', showDropdown, 'new state:', !showDropdown);
+    setShowDropdown(!showDropdown);
+  };
   return (
     <div className="_feed_inner_timeline_post_area _b_radious6 _padd_b24 _padd_t24 _mar_b16">
       <div className="_feed_inner_timeline_content _padd_r24 _padd_l24">
         <div className="_feed_inner_timeline_post_top">
           <div className="_feed_inner_timeline_post_box">
             <div className="_feed_inner_timeline_post_box_image">
-              <img src="/assets/images/post_img.png" alt="" className="_post_img" />
+              <div
+                className="_post_img"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '18px',
+                  fontWeight: 'bold'
+                }}
+              >
+                {post.user ? getAvatarInitial(post.user.first_name) : 'U'}
+              </div>
             </div>
             <div className="_feed_inner_timeline_post_box_txt">
-              <h4 className="_feed_inner_timeline_post_box_title">Karim Saif</h4>
-              <p className="_feed_inner_timeline_post_box_para">5 minute ago . 
-                <Link to="/profile">Public</Link>
+              <h4 className="_feed_inner_timeline_post_box_title">
+                {post.user ? `${post.user.first_name} ${post.user.last_name}` : 'Unknown User'}
+              </h4>
+              <p className="_feed_inner_timeline_post_box_para">
+                {getTimeAgo(post.created_at)} .
+                <Link to="/profile">{post.visibility === 'public' ? 'Public' : 'Private'}</Link>
               </p>
             </div>
           </div>
-          <div className="_feed_inner_timeline_post_box_dropdown">
-            <div className="_feed_timeline_post_dropdown">
-              <button id="_timeline_show_drop_btn" className="_feed_timeline_post_dropdown_link">
+          {isOwner && (
+            <div
+              className="_feed_inner_timeline_post_box_dropdown"
+              style={{ position: "relative" }}
+              ref={dropdownRef}
+            >
+              {/* Toggle Button */}
+              <button
+                type="button"
+                className="_feed_timeline_post_dropdown_link"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDropdown(prev => !prev);
+                }}
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" width="4" height="17" fill="none" viewBox="0 0 4 17">
                   <circle cx="2" cy="2" r="2" fill="#C4C4C4" />
                   <circle cx="2" cy="8" r="2" fill="#C4C4C4" />
                   <circle cx="2" cy="15" r="2" fill="#C4C4C4" />
                 </svg>
               </button>
+
+              {/* Dropdown */}
+              {showDropdown && (
+                <div
+                  className="_feed_timeline_dropdown"
+                  style={{
+                    position: "absolute",
+                    top: "110%",
+                    right: 0,
+                    zIndex: 9999,
+                    background: "#fff",
+                    borderRadius: "6px",
+                    border: "1px solid #ddd",
+                    boxShadow: "0 4px 10px rgba(0,0,0,0.14)",
+                    minWidth: "180px",
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ul className="_feed_timeline_dropdown_item">
+                    <li><button className="_feed_timeline_dropdown_link">Edit Post</button></li>
+                    <li>
+                      <button
+                        className="_feed_timeline_dropdown_link"
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? "Deleting..." : "Delete Post"}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
-            <div id="_timeline_drop" className="_feed_timeline_dropdown _timeline_dropdown">
-              <ul className="_feed_timeline_dropdown_list">
-                <li className="_feed_timeline_dropdown_item">
-                  <Link to="/profile" className="_feed_timeline_dropdown_link"><span>Save Post</span></Link>
-                </li>
-                <li className="_feed_timeline_dropdown_item">
-                  <Link to="/profile" className="_feed_timeline_dropdown_link"><span>Turn On Notification</span></Link>
-                </li>
-                <li className="_feed_timeline_dropdown_item">
-                  <Link to="/profile" className="_feed_timeline_dropdown_link"><span>Hide</span></Link>
-                </li>
-                <li className="_feed_timeline_dropdown_item">
-                  <Link to="/profile" className="_feed_timeline_dropdown_link"><span>Edit Post</span></Link>
-                </li>
-                <li className="_feed_timeline_dropdown_item">
-                  <Link to="/profile" className="_feed_timeline_dropdown_link"><span>Delete Post</span></Link>
-                </li>
-              </ul>
-            </div>
+          )}
+
+        </div>
+        <h4 className="_feed_inner_timeline_post_title">{post.content}</h4>
+        {post.image && (
+          <div className="_feed_inner_timeline_image">
+            <img
+              src={post.image.startsWith('http') ? post.image : `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/storage/${post.image}`}
+              alt="Post"
+              className="_time_img"
+              onError={(e) => {
+                console.error('Image failed to load:', post.image, 'Full URL tried:', post.image.startsWith('http') ? post.image : `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/storage/${post.image}`);
+                e.currentTarget.style.display = 'none';
+              }}
+            />
           </div>
-        </div>
-        <h4 className="_feed_inner_timeline_post_title">-Healthy Tracking App</h4>
-        <div className="_feed_inner_timeline_image">
-          <img src="/assets/images/timeline_img.png" alt="" className="_time_img" />
-        </div>
+        )}
       </div>
       <div className="_feed_inner_timeline_total_reacts _padd_r24 _padd_l24 _mar_b26">
         <div className="_feed_inner_timeline_total_reacts_image">
