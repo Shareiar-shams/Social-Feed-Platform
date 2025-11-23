@@ -1739,6 +1739,7 @@
     -webkit-transition:.2s all ease;
     -o-transition:.2s all ease;
     transition:.2s all ease;
+    overflow: visible !important;
 }
 ._feed_inner_timeline_post_top {
     display: -webkit-box;
@@ -5616,48 +5617,64 @@
 ._feed_inner_timeline_post_box_dropdown {
     position: relative;
 }
+/* Dropdown container */
 ._feed_timeline_dropdown {
     position: absolute;
-    top: 0px;
+    top: 100%; /* position below the button */
     right: 0;
-    min-width: 312px;
-    background: var(--bg2);
-    -webkit-box-shadow: 0px 10px 20px rgb(0 0 0 / 8%);
-    box-shadow: 0px 10px 20px rgb(0 0 0 / 8%);
-    border-radius: 6px;
-    padding: 16px;
-    -webkit-transform: translateY(40px);
-    -ms-transform: translateY(40px);
-    transform: translateY(40px);
-    z-index: 1;
-    -webkit-transition:.2s all ease;
-    -o-transition:.2s all ease;
-    opacity: 0;
-    visibility: hidden;
-    transition:.2s all ease;
+    min-width: 280px; /* slightly smaller for modern look */
+    background: var(--bg2, #fff);
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    padding: 12px 0; /* reduce padding for cleaner spacing */
+    transform: translateY(10px); /* small offset */
+    z-index: 1000;
+    transition: all 0.2s ease;
 }
+
+/* Each item wrapper */
 ._feed_timeline_dropdown_item {
-    margin:0 0 16px 0;
+    margin: 0;
 }
+
+/* Dropdown button/link inside */
 ._feed_timeline_dropdown_link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 16px;
     font-weight: 500;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.2;
     color: #666666;
-    -webkit-transition: .2s all ease;
-    -o-transition: .2s all ease;
-    transition: .2s all ease;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 6px;
 }
+
+/* Hover effect */
 ._feed_timeline_dropdown_link:hover {
-    color:var(--color5);
+    background: #f0f4ff; /* light hover background */
+    color: var(--color5, #007bff);
 }
+
+/* Icon circle in link */
 ._feed_timeline_dropdown_link span {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
     background: #ebf2ff;
-    padding:10px;
     border-radius: 50%;
-    margin:0 8px 0 0;
+    margin-right: 12px;
+    font-size: 16px;
+    color: var(--color5, #007bff);
 }
+
 /*---- Dropdown Css End ----*/
 
 /*----- For Mobile Version Css End ------*/
