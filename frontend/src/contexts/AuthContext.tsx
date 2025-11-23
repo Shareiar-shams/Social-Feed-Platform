@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import type { User, LoginCredentials, RegisterCredentials } from '../types/auth';
 
@@ -10,6 +11,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => Promise<void>;
+  handleTokenExpired: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is already logged in
@@ -30,6 +33,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setIsLoading(false);
   }, []);
+
+  // Handle token expiration
+  const handleTokenExpired = () => {
+    setToken(null);
+    setUser(null);
+    authService.removeToken();
+    authService.removeUser();
+    navigate('/login', { replace: true });
+  };
+
+  // Setup global error handler for 401 responses
+  useEffect(() => {
+    const handleUnauthorized = (event: CustomEvent) => {
+      handleTokenExpired();
+    };
+
+    window.addEventListener('auth:unauthorized' as any, handleUnauthorized);
+
+    return () => {
+      window.removeEventListener('auth:unauthorized' as any, handleUnauthorized);
+    };
+  }, [navigate]);
 
   const login = async (credentials: LoginCredentials) => {
     try {
@@ -78,6 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     register,
     logout,
+    handleTokenExpired,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
