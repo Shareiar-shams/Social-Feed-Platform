@@ -3,6 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Models\User\Accessors\UserAccessors;
+use App\Models\User\Mutators\UserMutators;
+use App\Models\User\Relations\UserRelations;
+use App\Models\User\Scopes\UserScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -12,6 +17,15 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    // Relations
+    use UserRelations;
+
+    // Accessors & Mutators
+    use UserAccessors, UserMutators;
+
+    // Scopes
+    use UserScopes;
 
     /**
      * The attributes that are mass assignable.
