@@ -31,7 +31,7 @@ export default function Feed() {
 
       setLoading(true);
       try {
-        const res = await postService.getPostsPaginated(page, 10);
+        const res = await postService.getPostsPaginated(page, 30);
 
         // Filter posts based on visibility
         const filteredPosts = res.data.filter(post => {
