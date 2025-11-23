@@ -47,4 +47,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Helper: check if user liked something
+    public function hasLiked($likeable)
+    {
+        return $this->likes()->where('likeable_id', $likeable->id)
+                           ->where('likeable_type', get_class($likeable))
+                           ->exists();
+    }
 }
