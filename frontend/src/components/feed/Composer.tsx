@@ -187,32 +187,16 @@ export default function Composer({ onPostCreated }: ComposerProps) {
           )}
           
           {/* Visibility selector */}
-          <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}>
-            <select 
-              value={visibility}
-              onChange={(e) => setVisibility(e.target.value as 'public' | 'private')}
-              disabled={isSubmitting}
-              style={{ 
-                width: 'auto', 
-                minWidth: '110px',
-                fontSize: '0.875rem',
-                padding: '0.35rem 2rem 0.35rem 0.5rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                backgroundColor: '#fff',
-                cursor: 'pointer',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                MozAppearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.5rem center',
-                backgroundSize: '12px'
-              }}
-            >
-              <option value="public">🌐 Public</option>
-              <option value="private">🔒 Private</option>
-            </select>
+          <div className="visibility-select-wrapper">
+              <select 
+                value={visibility}
+                onChange={(e) => setVisibility(e.target.value as 'public' | 'private')}
+                disabled={isSubmitting}
+                className="visibility-select"
+              >
+                <option value="public" data-icon="🌐">🌐 Public</option>
+                <option value="private" data-icon="🔒">🔒 Private</option>
+              </select>
           </div>
         </div>
       </div>
