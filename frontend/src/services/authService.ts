@@ -1,6 +1,35 @@
+import axios from 'axios';
 import type { LoginCredentials, RegisterCredentials, AuthResponse, User } from '../types/auth';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add token to requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle 401 responses (token expired)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Dispatch custom event for token expiration
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+    }
+    return Promise.reject(error);
+  }
+);
 
 export type { LoginCredentials, RegisterCredentials, AuthResponse, User };
 
@@ -89,6 +118,19 @@ export const authService = {
 
   removeUser(): void {
     localStorage.removeItem('auth_user');
+  },
+
+  async verifyToken(): Promise<boolean> {
+    const token = this.getToken();
+    if (!token) return false;
+
+    try {
+      // Use a protected endpoint to verify token
+      await api.get('/posts');
+      return true;
+    } catch (error) {
+      return false;
+    }
   },
 
   isAuthenticated(): boolean {

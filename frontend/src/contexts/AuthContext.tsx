@@ -23,15 +23,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const storedToken = authService.getToken();
-    const storedUser = authService.getUser();
+    const initializeAuth = async () => {
+      // Check if user is already logged in
+      const storedToken = authService.getToken();
+      const storedUser = authService.getUser();
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(storedUser);
-    }
-    setIsLoading(false);
+      if (storedToken && storedUser) {
+        // Verify token is still valid
+        const isValid = await authService.verifyToken();
+        if (isValid) {
+          setToken(storedToken);
+          setUser(storedUser);
+        } else {
+          // Token expired, clear it
+          authService.removeToken();
+          authService.removeUser();
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   // Handle token expiration
