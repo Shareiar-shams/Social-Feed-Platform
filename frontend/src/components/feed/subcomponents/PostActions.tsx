@@ -6,9 +6,10 @@ import type { Post } from '../../../services/postService';
 interface PostActionsProps {
   post: Post;
   onPostUpdate?: (updatedPost: Post) => void;
+  onCommentClick?: () => void;
 }
 
-export function PostActions({ post, onPostUpdate }: PostActionsProps) {
+export function PostActions({ post, onPostUpdate, onCommentClick }: PostActionsProps) {
   const { user } = useAuth();
 
   const [liked, setLiked] = useState(false);
@@ -71,6 +72,49 @@ export function PostActions({ post, onPostUpdate }: PostActionsProps) {
     setLoading(false);
   };
 
+  const handleCommentClick = () => {
+    onCommentClick?.();
+    // Dispatch custom event for PostComments to listen, with post ID
+    window.dispatchEvent(new CustomEvent('focusCommentInput', { detail: { postId: post.id } }));
+  };
+
+  const handleShare = async () => {
+    const postUrl = `${window.location.origin}/post/${post.id}`;
+    const shareData = {
+      title: `Check out this post by ${post.user?.first_name} ${post.user?.last_name}`,
+      text: post.content ? post.content.substring(0, 100) + '...' : 'Check out this interesting post!',
+      url: postUrl
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        console.log('Share cancelled or failed:', error);
+        // Fallback to clipboard
+        copyToClipboard(postUrl);
+      }
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      copyToClipboard(postUrl);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Post link copied to clipboard!');
+    }).catch(() => {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Post link copied to clipboard!');
+    });
+  };
+
   return (
     <div className="_feed_inner_timeline_reaction">
       <button
@@ -86,11 +130,17 @@ export function PostActions({ post, onPostUpdate }: PostActionsProps) {
         </span>
       </button>
 
-      <button className="_feed_inner_timeline_reaction_comment _feed_reaction">
+      <button
+        className="_feed_inner_timeline_reaction_comment _feed_reaction"
+        onClick={handleCommentClick}
+      >
         <span className="_feed_inner_timeline_reaction_link"><span>Comment</span></span>
       </button>
 
-      <button className="_feed_inner_timeline_reaction_share _feed_reaction">
+      <button
+        className="_feed_inner_timeline_reaction_share _feed_reaction"
+        onClick={handleShare}
+      >
         <span className="_feed_inner_timeline_reaction_link"><span>Share</span></span>
       </button>
     </div>
