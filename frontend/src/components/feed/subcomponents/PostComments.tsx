@@ -35,16 +35,19 @@ export const PostComments = forwardRef<PostCommentsRef, PostCommentsProps>(({ po
 
   // Listen for focus event from PostStats
   useEffect(() => {
-    const handleFocusEvent = () => {
-      commentInputRef.current?.focus();
+    const handleFocusEvent = (event: CustomEvent) => {
+      const { postId: eventPostId } = event.detail;
+      if (eventPostId === postId) {
+        commentInputRef.current?.focus();
+      }
     };
 
-    window.addEventListener('focusCommentInput', handleFocusEvent);
+    window.addEventListener('focusCommentInput', handleFocusEvent as EventListener);
 
     return () => {
-      window.removeEventListener('focusCommentInput', handleFocusEvent);
+      window.removeEventListener('focusCommentInput', handleFocusEvent as EventListener);
     };
-  }, []);
+  }, [postId]);
 
   // Update comment count when comments change
   useEffect(() => {
