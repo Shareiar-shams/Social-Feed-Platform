@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Post\Post;
+use App\Models\Comment\Comment;
 use Illuminate\Http\Request;
 
 class LikeController extends Controller
 {
     public function getLikes($type, $id)
     {
-        $model = $type === 'post' ? 'App\Models\Post\Post' : 'App\Models\Comment\Comment';
+        $model = $type === 'post' ? Post::class : Comment::class;
         $likeable = $model::findOrFail($id);
 
         // Get all likes with users
@@ -17,25 +19,33 @@ class LikeController extends Controller
 
         return response()->json([
             'count' => $likes->count(),
-            'users' => $likes->pluck('user')
+            'users' => $likes->map(fn($like) => $like->user)
         ]);
     }
 
     public function toggle(Request $request, $type, $id)
     {
-        $model = $type === 'post' ? 'App\Models\Post\Post' : 'App\Models\Comment\Comment';
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $model = $type === 'post' ? Post::class : Comment::class;
         $likeable = $model::findOrFail($id);
 
-        $like = $request->user()->likes()
-            ->where('likeable_id', $id)
-            ->where('likeable_type', $model)
+        // Check if user already liked this
+        $like = $likeable->likes()
+            ->where('user_id', $user->id)
             ->first();
 
         if ($like) {
+            // Unlike
             $like->delete();
         } else {
+            // Like
             $likeable->likes()->create([
-                'user_id' => $request->user()->id
+                'user_id' => $user->id
             ]);
         }
 
@@ -43,9 +53,9 @@ class LikeController extends Controller
         $likes = $likeable->likes()->with('user')->get();
 
         return response()->json([
-            'liked' => $likeable->likes()->where('user_id', $request->user()->id)->exists(),
+            'liked' => $likeable->likes()->where('user_id', $user->id)->exists(),
             'count' => $likes->count(),
-            'users' => $likes->pluck('user')
+            'users' => $likes->map(fn($like) => $like->user)
         ]);
     }
 
