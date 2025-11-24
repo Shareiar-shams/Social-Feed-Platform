@@ -53,7 +53,7 @@ export default function TimelinePost({ post, onPostUpdate, onPostDelete }: Timel
       <PostActions post={post} onPostUpdate={onPostUpdate} />
 
       {/* Post Comments */}
-      <PostComments />
+      <PostComments postId={post.id} />
     </div>
   );
 }
