@@ -10,12 +10,16 @@ interface LikeUser {
 
 interface PostStatsProps {
   post: any;
+  commentCount?: number;
+  onCommentClick?: () => void;
+  postId?: number;
 }
 
-export function PostStats({ post }: PostStatsProps) {
+export function PostStats({ post, commentCount: initialCommentCount = 0, onCommentClick, postId }: PostStatsProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [likeUsers, setLikeUsers] = useState<LikeUser[]>([]);
   const [loading, setLoading] = useState(false);
+  const [commentCount, setCommentCount] = useState(initialCommentCount);
 
   // Get first character of user's first name for avatar
   const getAvatarChar = (firstName: string): string => {
@@ -59,6 +63,22 @@ export function PostStats({ post }: PostStatsProps) {
       setLikeUsers([]);
     }
   }, [post.likes, post.id]);
+
+  // Listen for comment count updates
+  useEffect(() => {
+    const handleCommentCountUpdate = (event: CustomEvent) => {
+      const { postId: eventPostId, count } = event.detail;
+      if (eventPostId === postId || eventPostId === post.id) {
+        setCommentCount(count);
+      }
+    };
+
+    window.addEventListener('commentCountUpdate', handleCommentCountUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('commentCountUpdate', handleCommentCountUpdate as EventListener);
+    };
+  }, [postId, post.id]);
 
   return (
     <>
@@ -110,7 +130,24 @@ export function PostStats({ post }: PostStatsProps) {
         {/* COMMENT & SHARE */}
         <div className="_feed_inner_timeline_total_reacts_txt">
           <p className="_feed_inner_timeline_total_reacts_para1">
-            <Link to="/comment"><span>12</span> Comment</Link>
+            <button
+              onClick={() => {
+                onCommentClick?.();
+                // Dispatch custom event for PostComments to listen
+                window.dispatchEvent(new CustomEvent('focusCommentInput'));
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#666',
+                cursor: 'pointer',
+                textDecoration: 'none',
+                fontSize: 'inherit',
+                padding: 0
+              }}
+            >
+              <span>{commentCount}</span> Comment{commentCount !== 1 ? 's' : ''}
+            </button>
           </p>
           <p className="_feed_inner_timeline_total_reacts_para2">
             <span>122</span> Share
