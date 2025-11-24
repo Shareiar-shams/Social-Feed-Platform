@@ -85,6 +85,14 @@ export const postService = {
       });
       return response.data;
   },
+
+  // Get paginated posts by user (for current user's own posts)
+  async getPostsByUser(userId: number, page = 1, perPage = 10): Promise<{ data: Post[], current_page: number, last_page: number }> {
+      const response = await api.get(`/posts/user/${userId}`, {
+          params: { page, per_page: perPage }
+      });
+      return response.data;
+  },
   // Create a new post
   async createPost(data: CreatePostData): Promise<{ message: string; post: Post }> {
     const formData = new FormData();
