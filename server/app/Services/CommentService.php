@@ -15,11 +15,9 @@ class CommentService
         $post = Post::findOrFail($postId);
 
         $comments = $post->comments()
-            ->whereNull('parent_id')      // Only top-level comments
+            ->whereNull('parent_id')
             ->with([
-                'replies' => function ($query) {
-                    $query->with('user', 'likes.user');
-                },
+                'replies',          // recursive, unlimited depth
                 'user',
                 'likes.user'
             ])
@@ -35,6 +33,7 @@ class CommentService
             'comments' => $comments
         ];
     }
+
 
     /**
      * Create a new comment
