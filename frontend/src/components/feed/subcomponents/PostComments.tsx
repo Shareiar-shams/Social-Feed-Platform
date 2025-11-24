@@ -47,14 +47,8 @@ export function PostComments({ postId }: PostCommentsProps) {
       const res = await commentService.createComment(postId, newContent, parentId);
 
       if (parentId) {
-        // Add reply under the parent comment
-        setComments((prev) =>
-          prev.map((c) =>
-            c.id === parentId
-              ? { ...c, replies: [...(c.replies || []), res.comment] }
-              : c
-          )
-        );
+        // Add reply under the parent comment (recursively)
+        setComments((prev) => addReplyToTree(prev, parentId, res.comment));
       } else {
         // Add as top-level comment
         setComments((prev) => [res.comment, ...prev]);
@@ -76,6 +70,25 @@ export function PostComments({ postId }: PostCommentsProps) {
 
   const handleCommentDelete = (deletedComment: Comment) => {
     setComments((prev) => removeCommentFromTree(prev, deletedComment.id));
+  };
+
+  const addReplyToTree = (comments: Comment[], parentId: number, newReply: Comment): Comment[] => {
+    return comments.map((c) => {
+      if (c.id === parentId) {
+        // Found the parent, add the reply
+        return {
+          ...c,
+          replies: [...(c.replies || []), newReply]
+        };
+      } else if (c.replies) {
+        // Recursively search in replies
+        return {
+          ...c,
+          replies: addReplyToTree(c.replies, parentId, newReply)
+        };
+      }
+      return c;
+    });
   };
 
   const removeCommentFromTree = (comments: Comment[], commentId: number): Comment[] => {
