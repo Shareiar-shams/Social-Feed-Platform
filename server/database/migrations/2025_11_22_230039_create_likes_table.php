@@ -23,7 +23,6 @@ return new class extends Migration
 
             $table->timestamps();
             $table->unique(['user_id', 'likeable_id', 'likeable_type']);
-            $table->softDeletes();
         });
     }
 
