@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import App from './App'
 import Feed from './pages/Feed'
+import PostDetail from './pages/PostDetail'
 import MyProfile from './pages/MyProfile'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
@@ -36,21 +37,29 @@ createRoot(document.getElementById('root')!).render(
                 </GuestRoute>
               } 
             />
-            <Route 
-              path="feed" 
+            <Route
+              path="feed"
               element={
                 <ProtectedRoute>
                   <Feed />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="profile" 
+            <Route
+              path="feed/:id"
+              element={
+                <ProtectedRoute>
+                  <PostDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="profile"
               element={
                 <ProtectedRoute>
                   <MyProfile />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route 
               path="setting" 
