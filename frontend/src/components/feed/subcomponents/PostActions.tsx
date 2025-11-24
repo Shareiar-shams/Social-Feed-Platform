@@ -90,7 +90,6 @@ export function PostActions({ post, onPostUpdate, onCommentClick }: PostActionsP
       try {
         await navigator.share(shareData);
       } catch (error) {
-        console.log('Share cancelled or failed:', error);
         // Fallback to clipboard
         copyToClipboard(postUrl);
       }
