@@ -29,11 +29,14 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Give proper permissions
+# Set permissions
 RUN chmod -R 777 storage bootstrap/cache
+
+# Create the storage symlink
+RUN php artisan storage:link
 
 # Expose port (Laravel will run on $PORT from Railway)
 EXPOSE 8000
 
-# Run migrations **and then start the server**
+# Run migrations and start server
 CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT}
