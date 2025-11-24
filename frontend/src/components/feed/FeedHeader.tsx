@@ -180,7 +180,7 @@ export default function FeedHeader() {
                 </div>
                 <div className="_nav_profile_dropdown_info_txt">
                   <h4 className="_nav_dropdown_title">{userName}</h4>
-                  <a href="profile.html" className="_nav_drop_profile">View Profile</a>
+                  <Link to="/profile" className="_nav_drop_profile">View Profile</Link>
                 </div>
               </div>
               <hr />
