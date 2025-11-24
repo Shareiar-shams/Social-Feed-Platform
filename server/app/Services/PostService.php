@@ -35,12 +35,12 @@ class PostService
         return Post::withPostRelations()->findOrFail($id);
     }
 
-    public function getPostsByUser($userId)
+    public function getPostsByUser($userId, $perPage = 10)
     {
         return Post::ownedBy($userId)
             ->withPostRelations()
             ->latest()
-            ->get();
+            ->paginate($perPage);
     }
 
     public function getSinglePostForUser($id, $userId)
