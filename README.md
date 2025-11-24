@@ -134,7 +134,7 @@ This application consists of two main components:
 - **State Management**: React Context + Hooks
 - **Icons**: FontAwesome
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /api/register` - User registration
