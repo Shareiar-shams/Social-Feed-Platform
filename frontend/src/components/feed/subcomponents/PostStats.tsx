@@ -150,7 +150,7 @@ export function PostStats({ post, commentCount: initialCommentCount = 0, onComme
             </button>
           </p>
           <p className="_feed_inner_timeline_total_reacts_para2">
-            <span>122</span> Share
+            <span>0</span> Share
           </p>
         </div>
       </div>
