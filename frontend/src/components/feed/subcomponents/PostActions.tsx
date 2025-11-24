@@ -10,55 +10,81 @@ interface PostActionsProps {
 
 export function PostActions({ post, onPostUpdate }: PostActionsProps) {
   const { user } = useAuth();
+
   const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(post.likes_count || 0);
-  const [likeUsers, setLikeUsers] = useState(post.likes || []);
+  const [likesCount, setLikesCount] = useState(0);
+  const [likeUsers, setLikeUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Initialize like state on mount and when post changes
+  // Load initial values
   useEffect(() => {
-    if (post.likes_count !== undefined) {
-      setLikesCount(post.likes_count);
-    }
+    // initial like count
+    setLikesCount(post.likes_count || 0);
+
+    // initial users list and check if user liked
     if (post.likes && Array.isArray(post.likes)) {
-      setLikeUsers(post.likes);
-      setLiked(post.likes.some(l => l.user_id === user?.id) || false);
+      // Handle both data structures: { user: {} } and direct user objects
+      const users = post.likes.map((l) => l.user || l);
+      setLikeUsers(users);
+
+      // check if this user liked
+      const userLiked = post.likes.some((l) => (l.user_id || l.id) === user?.id);
+      setLiked(userLiked);
+    } else {
+      setLiked(false);
+      setLikeUsers([]);
     }
-  }, [post.id, post.likes_count, post.likes, user?.id]);
+  }, [post.id, post.likes, post.likes_count, user?.id]);
 
   const handleLike = async () => {
     if (!user || loading) return;
+
+    // --- OPTIMISTIC UI UPDATE ---
+    const optimisticLiked = !liked;
+    setLiked(optimisticLiked);
+    setLikesCount((prev) => (optimisticLiked ? prev + 1 : prev - 1));
+
     setLoading(true);
 
     try {
       const res = await likeService.toggleLike('post', post.id);
-
-      // Update local states
+      
+      // update states with backend true values
       setLiked(res.liked);
       setLikesCount(res.count);
+      
+      // Backend returns users array directly
       setLikeUsers(res.users || []);
 
-      // Update parent component with new post data
+      // Update parent post list
       onPostUpdate?.({
         ...post,
         likes_count: res.count,
-        likes: res.users || []
+        likes: res.users?.map((u: any) => ({
+          user_id: u.id,
+          user: u
+        })) || []
       });
 
-    } catch (err) {
-      console.error('Like error:', err);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Like error:', error);
+
+      // revert optimistic UI if failed
+      setLiked(!optimisticLiked);
+      setLikesCount((prev) => (optimisticLiked ? prev - 1 : prev + 1));
     }
+
+    setLoading(false);
   };
 
   return (
     <div className="_feed_inner_timeline_reaction">
       <button
-        className={`_feed_inner_timeline_reaction_emoji _feed_reaction ${liked ? '_feed_reaction_active' : ''}`}
+        className={`_feed_inner_timeline_reaction_emoji _feed_reaction ${
+          liked ? '_feed_reaction_active' : ''
+        }`}
         onClick={handleLike}
         disabled={loading}
-        title={liked ? 'Unlike this post' : 'Like this post'}
       >
         <span className="_feed_inner_timeline_reaction_link">
           <span>{liked ? 'Unlike' : 'Like'}</span>
