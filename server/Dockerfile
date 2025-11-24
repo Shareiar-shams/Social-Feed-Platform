@@ -35,5 +35,8 @@ RUN chmod -R 777 storage bootstrap/cache
 # Expose port (Laravel will run on $PORT from Railway)
 EXPOSE 8000
 
+# run artisan serve on container start
+CMD php artisan migrate --force
+
 # Start Laravel using Artisan
 CMD php artisan serve --host=0.0.0.0 --port=${PORT}
