@@ -64,7 +64,18 @@ class LikeService {
   // Toggle like/unlike for a post or comment
   async toggleLike(type: 'post' | 'comment', id: number): Promise<LikeResponse> {
     try {
-      const res = await api.post(`/like/${type}/${id}`);
+      const token = localStorage.getItem('auth_token');
+      
+      if (!token) {
+        console.error('No auth token found in localStorage');
+        throw new Error('Authentication token not found');
+      }
+
+      const res = await api.post(`/like/${type}/${id}`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
       return res.data;
     } catch (error) {
       console.error(`Error toggling like for ${type}/${id}:`, error);
@@ -75,7 +86,18 @@ class LikeService {
   // Get all likes for a post or comment
   async getLikes(type: 'post' | 'comment', id: number): Promise<LikesListResponse> {
     try {
-      const res = await api.get(`/like/${type}/${id}`);
+      const token = localStorage.getItem('auth_token');
+      
+      if (!token) {
+        console.error('No auth token found in localStorage');
+        throw new Error('Authentication token not found');
+      }
+
+      const res = await api.get(`/like/${type}/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
       return res.data;
     } catch (error) {
       console.error(`Error fetching likes for ${type}/${id}:`, error);
