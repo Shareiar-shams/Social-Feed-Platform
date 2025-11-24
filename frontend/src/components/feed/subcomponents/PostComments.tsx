@@ -149,8 +149,7 @@ export const PostComments = forwardRef<PostCommentsRef, PostCommentsProps>(({ po
   const handleReplyClick = (parentId: number, author: string, content: string) => {
     setReplyingTo({ id: parentId, author, content });
     setTimeout(() => {
-      const textarea = document.querySelector('._feed_inner_comment_box_content_txt textarea');
-      if (textarea instanceof HTMLTextAreaElement) textarea.focus();
+      commentInputRef.current?.focus();
     }, 0);
   };
 
