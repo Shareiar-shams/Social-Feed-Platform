@@ -186,7 +186,7 @@ export default function FeedHeader() {
               <hr />
               <ul className="_nav_dropdown_list">
                 <li className="_nav_dropdown_list_item">
-                  <Link to="/profile" className="_nav_dropdown_link">
+                  <Link to="/setting" className="_nav_dropdown_link">
                     <div className="_nav_drop_info">
                       <span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="19" fill="none" viewBox="0 0 18 19">
@@ -195,11 +195,6 @@ export default function FeedHeader() {
                       </span>
                       Settings
                     </div>
-                    <span className="_nav_drop_btn_link">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="6" height="10" fill="none" viewBox="0 0 6 10">
-                        <path fill="#112032" d="M5 5l.354.354L5.707 5l-.353-.354L5 5zM1.354 9.354l4-4-.708-.708-4 4 .708.708zm4-4.708l-4-4-.708.708 4 4 .708-.708z" opacity=".5"/>
-                      </svg>
-                    </span>
                   </Link>
                 </li>
                 <li className="_nav_dropdown_list_item">
