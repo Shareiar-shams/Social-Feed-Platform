@@ -1,14 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import commentService, { type Comment } from '../../../services/commentService';
 import { CommentItem } from './CommentItem';
 
 interface PostCommentsProps {
   postId: number;
+  onCommentCountChange?: (count: number) => void;
 }
 
-export function PostComments({ postId }: PostCommentsProps) {
+export interface PostCommentsRef {
+  focusCommentInput: () => void;
+}
+
+export const PostComments = forwardRef<PostCommentsRef, PostCommentsProps>(({ postId, onCommentCountChange }, ref) => {
   const { user } = useAuth();
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -16,10 +22,47 @@ export function PostComments({ postId }: PostCommentsProps) {
   const [replyingTo, setReplyingTo] = useState<{ id: number; author: string; content: string } | null>(null);
   const [showAllComments, setShowAllComments] = useState(false);
 
+  useImperativeHandle(ref, () => ({
+    focusCommentInput: () => {
+      commentInputRef.current?.focus();
+    }
+  }));
+
   // Fetch comments on mount
   useEffect(() => {
     fetchComments();
   }, [postId]);
+
+  // Listen for focus event from PostStats
+  useEffect(() => {
+    const handleFocusEvent = () => {
+      commentInputRef.current?.focus();
+    };
+
+    window.addEventListener('focusCommentInput', handleFocusEvent);
+
+    return () => {
+      window.removeEventListener('focusCommentInput', handleFocusEvent);
+    };
+  }, []);
+
+  // Update comment count when comments change
+  useEffect(() => {
+    const totalComments = getTotalCommentCount(comments);
+    onCommentCountChange?.(totalComments);
+    // Dispatch custom event for PostStats to listen
+    window.dispatchEvent(new CustomEvent('commentCountUpdate', { detail: { postId, count: totalComments } }));
+  }, [comments, onCommentCountChange, postId]);
+
+  const getTotalCommentCount = (comments: Comment[]): number => {
+    let count = comments.length;
+    for (const comment of comments) {
+      if (comment.replies) {
+        count += getTotalCommentCount(comment.replies);
+      }
+    }
+    return count;
+  };
 
   const fetchComments = async () => {
     setLoading(true);
@@ -198,6 +241,7 @@ export function PostComments({ postId }: PostCommentsProps) {
                 </div>
               )}
               <textarea
+                ref={commentInputRef}
                 className="form-control _comment_textarea"
                 placeholder={replyingTo ? `Reply to ${replyingTo.author}...` : 'Write a comment...'}
                 value={commentContent}
@@ -270,4 +314,4 @@ export function PostComments({ postId }: PostCommentsProps) {
       </div>
     </div>
   );
-}
+});
