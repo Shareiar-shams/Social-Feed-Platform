@@ -60,7 +60,7 @@ export default function PostDetail() {
   };
 
   // When post is deleted
-  const handlePostDelete = (postId: number) => {
+  const handlePostDelete = () => {
     navigate('/feed'); // Redirect to feed when post is deleted
   };
 

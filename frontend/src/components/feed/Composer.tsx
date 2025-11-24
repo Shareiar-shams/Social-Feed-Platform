@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { postService } from '../../services/postService';
+import type { Post } from '../../services/postService';
 
 interface ComposerProps {
-  onPostCreated?: () => void;
+  onPostCreated?: (post?: Post) => void;
 }
 
 export default function Composer({ onPostCreated }: ComposerProps) {
@@ -117,8 +118,6 @@ export default function Composer({ onPostCreated }: ComposerProps) {
         image: selectedImage || undefined,
       });
 
-      const createdPost = response.data; // make sure your service returns Axios response
-
       // Success toast
       Swal.fire({
         toast: true,
@@ -144,7 +143,7 @@ export default function Composer({ onPostCreated }: ComposerProps) {
 
       // Map backend response to Post format
       if (response.post) {
-        const postData: Post = {
+        const postData = {
           id: response.post.id,
           content: response.post.content,
           visibility: response.post.visibility,
@@ -164,11 +163,11 @@ export default function Composer({ onPostCreated }: ComposerProps) {
                 last_name: 'User',
                 email: '',
               },
-          image: response.post.image || null,
+          image: response.post.image || undefined,
         };
 
         // Notify parent to render instantly
-        onPostCreated(postData);
+        onPostCreated?.(postData);
       }
 
     } catch (err: any) {

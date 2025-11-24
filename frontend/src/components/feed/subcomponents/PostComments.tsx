@@ -225,8 +225,8 @@ export const PostComments = forwardRef<PostCommentsRef, PostCommentsProps>(({ po
                         padding: '2px 4px',
                         borderRadius: '4px'
                       }}
-                      onMouseOver={(e) => e.target.style.backgroundColor = '#f5c6cb'}
-                      onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                      onMouseOver={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#f5c6cb'}
+                      onMouseOut={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'transparent'}
                     >
                       ✕ Cancel
                     </button>

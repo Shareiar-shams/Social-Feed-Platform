@@ -87,8 +87,10 @@ export default function Feed() {
   }, [handleScroll]);
 
   // When new post is created
-  const handlePostCreated = useCallback((newPost: Post) => {
-    setPosts(prev => [newPost, ...prev]);
+  const handlePostCreated = useCallback((newPost?: Post) => {
+    if (newPost) {
+      setPosts(prev => [newPost, ...prev]);
+    }
   }, []);
 
   // When post is updated

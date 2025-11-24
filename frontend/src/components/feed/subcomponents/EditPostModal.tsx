@@ -20,9 +20,7 @@ export const showEditPostModal = async ({ post, onPostUpdate }: EditPostModalPro
       confirmButton: 'swal-btn-confirm',
       cancelButton: 'swal-btn-cancel',
       input: 'swal-input',
-      textarea: 'swal-textarea',
-      select: 'swal-select',
-    },
+    } as any,
     didOpen: (modal) => {
       // Add event listeners or custom styles if needed
       const style = document.createElement('style');

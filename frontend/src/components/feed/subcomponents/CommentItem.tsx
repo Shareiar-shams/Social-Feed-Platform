@@ -251,10 +251,10 @@ export function CommentItem({
                       transition: 'all 0.2s'
                     }}
                     onMouseOver={(e) => {
-                      e.target.style.backgroundColor = '#f8f9fa';
+                      (e.target as HTMLButtonElement).style.backgroundColor = '#f8f9fa';
                     }}
                     onMouseOut={(e) => {
-                      e.target.style.backgroundColor = 'white';
+                      (e.target as HTMLButtonElement).style.backgroundColor = 'white';
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -281,12 +281,12 @@ export function CommentItem({
                     }}
                     onMouseOver={(e) => {
                       if (editContent.trim()) {
-                        e.target.style.backgroundColor = '#0056b3';
+                        (e.target as HTMLButtonElement).style.backgroundColor = '#0056b3';
                       }
                     }}
                     onMouseOut={(e) => {
                       if (editContent.trim()) {
-                        e.target.style.backgroundColor = '#007bff';
+                        (e.target as HTMLButtonElement).style.backgroundColor = '#007bff';
                       }
                     }}
                   >
