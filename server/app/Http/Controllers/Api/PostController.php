@@ -30,6 +30,25 @@ class PostController extends Controller
     }
 
     /**
+     * Get all posts by a specific user (both private and public)
+     */
+    public function getPostsByUser(Request $request, $userId)
+    {
+        // Check if the authenticated user is requesting their own posts or is an admin
+        // For now, allow authenticated users to see their own posts
+        if (auth()->id() !== (int)$userId) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $perPage = $request->query('per_page', 10);
+        $page = $request->query('page', 1);
+
+        $posts = $this->postService->getPostsByUser($userId, $perPage);
+
+        return response()->json($posts);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(PostCreateRequest $request)
