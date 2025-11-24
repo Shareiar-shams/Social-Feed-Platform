@@ -79,7 +79,7 @@ export function PostActions({ post, onPostUpdate, onCommentClick }: PostActionsP
   };
 
   const handleShare = async () => {
-    const postUrl = `${window.location.origin}/post/${post.id}`;
+    const postUrl = `${window.location.origin}/feed/${post.id}`;
     const shareData = {
       title: `Check out this post by ${post.user?.first_name} ${post.user?.last_name}`,
       text: post.content ? post.content.substring(0, 100) + '...' : 'Check out this interesting post!',
