@@ -2,7 +2,7 @@
 
 A modern, responsive React frontend for a social media feed application built with TypeScript and Vite. This frontend provides a beautiful user interface for creating posts, interacting with content through likes and comments, and sharing posts with others.
 
-## 🚀 Features
+## Features
 
 ### User Interface
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices
@@ -26,7 +26,7 @@ A modern, responsive React frontend for a social media feed application built wi
 - **Form Validation**: Client-side validation with user feedback
 - **Error Handling**: Comprehensive error states and user notifications
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **React 19**: Latest React with modern hooks and features
 - **TypeScript**: Type-safe JavaScript for better development experience
@@ -37,7 +37,7 @@ A modern, responsive React frontend for a social media feed application built wi
 - **FontAwesome**: Icon library for consistent UI elements
 - **TanStack Query**: Powerful data fetching and caching (optional)
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before running this project, make sure you have:
 
@@ -45,7 +45,7 @@ Before running this project, make sure you have:
 - **npm**: Node package manager (comes with Node.js)
 - **Backend API**: Laravel backend running (see server README)
 
-## 🚀 Installation
+## Installation
 
 ### 1. Clone and Navigate
 ```bash
@@ -78,7 +78,7 @@ REACT_APP_APP_NAME=BuddyScript
 REACT_APP_APP_VERSION=1.0.0
 ```
 
-## 🏃‍♂️ Running the Application
+## Running the Application
 
 ### Development Mode
 ```bash
@@ -104,7 +104,7 @@ npm run lint
 ```
 Runs ESLint to check code quality and style
 
-## 📖 Usage
+## Usage
 
 ### Application Flow
 
@@ -132,7 +132,7 @@ Runs ESLint to check code quality and style
    - Click on shared links or visit `/feed/{postId}`
    - View individual posts with full comment threads
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 frontend/
@@ -172,7 +172,7 @@ frontend/
 └── README.md
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -206,14 +206,14 @@ The frontend communicates with the Laravel backend through RESTful APIs:
 - **likeService**: Like/unlike functionality
 - **authService**: Authentication operations
 
-## 🎨 Styling
+## Styling
 
 - **Bootstrap**: Utility classes for responsive design
 - **Custom CSS**: Component-specific styles in `public/assets/css/`
 - **Inline Styles**: Component-level styling with React
 - **CSS Modules**: Scoped styling for complex components
 
-## 🧪 Testing
+## Testing
 
 ### Running Tests
 ```bash
@@ -229,7 +229,7 @@ npm run lint
 npx tsc --noEmit
 ```
 
-## 🚀 Deployment
+## Deployment
 
 ### Build Process
 ```bash
@@ -247,7 +247,7 @@ npm run build
 ### Web Server Configuration
 Serve the `dist` folder with any static web server (nginx, Apache, etc.)
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -271,14 +271,14 @@ Serve the `dist` folder with any static web server (nginx, Apache, etc.)
 - Verify Bootstrap classes are available
 - Check for CSS conflicts
 
-## 🤝 Contributing
+## Contributing
 
 1. Follow the existing code style and TypeScript conventions
 2. Use meaningful commit messages
 3. Test your changes thoroughly
 4. Update documentation as needed
 
-## 📄 Scripts
+## Scripts
 
 | Command | Description |
 |---------|-------------|
@@ -287,7 +287,7 @@ Serve the `dist` folder with any static web server (nginx, Apache, etc.)
 | `npm run preview` | Preview production build |
 | `npm run lint` | Run ESLint |
 
-## 📞 Support
+## Support
 
 For issues and questions:
 1. Check this README and troubleshooting section
