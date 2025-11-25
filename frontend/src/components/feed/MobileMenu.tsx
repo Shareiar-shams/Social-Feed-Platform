@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export default function MobileMenu() {
   return (
     <div className="_header_mobile_menu">
@@ -8,9 +10,9 @@ export default function MobileMenu() {
               <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                 <div className="_header_mobile_menu_top_inner">
                   <div className="_header_mobile_menu_logo">
-                    <a href="feed.html" className="_mobile_logo_link">
+                    <Link to="/feed" className="_mobile_logo_link">
                       <img src="/assets/images/logo.svg" alt="Image" className="_nav_logo" />
-                    </a>
+                    </Link>
                   </div>
                   <div className="_header_mobile_menu_right">
                     <form className="_header_form_grp">
