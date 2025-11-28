@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useCallback, useState } from 'react';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { Virtuoso } from 'react-virtuoso';
 import {
   FeedHeader,
   MobileMenu,
@@ -14,105 +16,211 @@ import { postService } from '../services/postService';
 import type { Post } from '../services/postService';
 import { useAuth } from '../contexts/AuthContext';
 
+// Small helper to update a post inside the paginated cache
+function updatePostInPages(pages: any, predicate: (p: Post) => boolean, updater: (p: Post) => Post) {
+  if (!pages) return pages;
+  return pages.map((page: any) => ({
+    ...page,
+    data: page.data.map((post: Post) => predicate(post) ? updater(post) : post)
+  }));
+}
+
 export default function Feed() {
-  const [darkMode, setDarkMode] = useState(false);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [isDark, setIsDark] = useState(false);
 
-  const toggleDarkMode = () => setDarkMode(!darkMode);
+  const queryKey = ['posts', user?.id, { visibility: 'list' }];
 
-  // Fetch posts with pagination
-  const fetchPosts = useCallback(
-    async (append: boolean = false) => {
-      if (loading || !hasMore) return;
+  // Apply dark mode by toggling a class on documentElement to avoid re-rendering the whole tree
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDark) root.classList.add('theme--dark');
+    else root.classList.remove('theme--dark');
+  }, [isDark]);
 
-      setLoading(true);
-      try {
-        const res = await postService.getPostsPaginated(page, 30);
+  // -------------------------
+  // React Query: infinite fetch
+  // -------------------------
+  // fetch function expects the server page-based response shape returned by postService.getPostsPaginated
+  // postService.getPostsPaginated(page, limit) -> { data: Post[], current_page, last_page, ... }
+  const fetchPosts = useCallback(async ({ pageParam = 1 }) => {
+    const res = await postService.getPostsPaginated(pageParam, 30);
+    // NOTE: Prefer server-side visibility filtering. If backend still returns extra items,
+    // we keep a small client-side fallback filter (non-destructive) to avoid showing private posts.
+    const filtered = res.data.filter((p: Post) => {
+      if (p.visibility === 'public') return true;
+      if (p.visibility === 'private' && p.user_id === user?.id) return true;
+      return false;
+    });
 
-        // Filter posts based on visibility
-        const filteredPosts = res.data.filter(post => {
-          if (post.visibility === 'public') return true;
-          if (post.visibility === 'private' && post.user_id === user?.id) return true;
-          return false;
-        });
+    return {
+      ...res,
+      data: filtered,
+      _page: pageParam,
+    };
+  }, [user?.id]);
 
-        if (append) {
-          setPosts(prev => [...prev, ...filteredPosts]);
-        } else {
-          setPosts(filteredPosts);
-        }
-
-        // Check if more pages exist
-        setHasMore(res.current_page < res.last_page);
-      } catch (error) {
-        console.error('Failed to fetch posts:', error);
-      } finally {
-        setLoading(false);
-      }
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey,
+    queryFn: fetchPosts,
+    getNextPageParam: (lastPage) => {
+      // page-based API -> compute next page
+      if (lastPage.current_page < lastPage.last_page) return lastPage.current_page + 1;
+      return undefined;
     },
-    [loading, page, user?.id, hasMore]
-  );
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
 
-  // Scroll handler for infinite scroll
-  const handleScroll = useCallback(() => {
-    if (loading || !hasMore) return;
+  // Flatten posts for rendering
+  const posts = useMemo(() => {
+    if (!data) return [];
+    return data.pages.flatMap((p: any) => p.data) as Post[];
+  }, [data]);
 
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
+  // -------------------------
+  // IntersectionObserver sentinel
+  // -------------------------
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
-    if (scrollTop + windowHeight >= documentHeight - 100) {
-      setPage(prev => prev + 1);
-    }
-  }, [loading, hasMore]);
-
-  // Fetch posts on page change
   useEffect(() => {
-    fetchPosts(page > 1);
-  }, [page, fetchPosts]);
+    if (!sentinelRef.current) return;
+    if (!hasNextPage) return; // nothing to do
 
-  // Initial fetch
-  useEffect(() => {
-    fetchPosts(false);
-  }, []);
+    observerRef.current = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      });
+    }, {
+      root: null,
+      rootMargin: '200px', // prefetch when sentinel is ~200px from viewport
+      threshold: 0.1,
+    });
 
-  // Add scroll event listener
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    observerRef.current.observe(sentinelRef.current);
 
-  // When new post is created
+    return () => {
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  // -------------------------
+  // Cache helpers for optimistic updates
+  // -------------------------
+  const optimisticUpdatePost = useCallback((postId: number, updater: (p: Post) => Post) => {
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: updatePostInPages(old.pages, (p: Post) => p.id === postId, updater),
+      };
+    });
+  }, [queryClient]);
+
+  const replacePostInCache = useCallback((newPost: Post) => {
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: updatePostInPages(old.pages, (p: Post) => p.id === newPost.id, () => newPost),
+      };
+    });
+  }, [queryClient]);
+
+  const removePostFromCache = useCallback((postId: number) => {
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          data: page.data.filter((p: Post) => p.id !== postId),
+        }))
+      };
+    });
+  }, [queryClient]);
+
+  // -------------------------
+  // Handlers passed to Composer / TimelinePost
+  // Keep these stable using useCallback
+  // -------------------------
   const handlePostCreated = useCallback((newPost?: Post) => {
-    if (newPost) {
-      setPosts(prev => [newPost, ...prev]);
-    }
-  }, []);
+    if (!newPost) return;
+    // Insert into first page in the cache
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old) {
+        // If cache empty, create initial structure
+        return {
+          pages: [{ data: [newPost], current_page: 1, last_page: 1 }],
+        };
+      }
 
-  // When post is updated
+      const newPages = [...old.pages];
+      // prepend to first page data
+      newPages[0] = { ...newPages[0], data: [newPost, ...newPages[0].data] };
+      return { ...old, pages: newPages };
+    });
+  }, [queryClient]);
+
   const handlePostUpdate = useCallback((updatedPost: Post) => {
-    setPosts(prev => prev.map(post =>
-      post.id === updatedPost.id ? updatedPost : post
-    ));
-  }, []);
+    replacePostInCache(updatedPost);
+  }, [replacePostInCache]);
 
-  // When post is deleted
   const handlePostDelete = useCallback((postId: number) => {
-    setPosts(prev => prev.filter(post => post.id !== postId));
-  }, []);
+    removePostFromCache(postId);
+  }, [removePostFromCache]);
 
+  // Example optimistic like toggle handler (TimelinePost may call this)
+  const handleToggleLike = useCallback(async (postId: number, liked: boolean) => {
+    // optimistic
+    optimisticUpdatePost(postId, (p) => ({
+      ...p,
+      is_liked: liked,
+      like_count: liked ? (p.like_count + 1) : Math.max(0, p.like_count - 1),
+    }));
+
+    try {
+      // call service
+      await postService.toggleLike(postId, liked);
+      // optionally refetch that single post or rely on server push
+    } catch (err) {
+      // rollback on error
+      optimisticUpdatePost(postId, (p) => ({
+        ...p,
+        is_liked: !liked,
+        like_count: !liked ? (p.like_count + 1) : Math.max(0, p.like_count - 1),
+      }));
+      console.error('Like toggle failed', err);
+    }
+  }, [optimisticUpdatePost]);
+
+  // -------------------------
+  // Rendering
+  // -------------------------
   return (
-    <div className={`_layout _layout_main_wrapper ${darkMode ? '_dark_wrapper' : ''}`}>
-      <div className="_layout_mode_swithing_btn">
-        <button type="button" className="_layout_swithing_btn_link" onClick={toggleDarkMode}>
-          <div className="_layout_swithing_btn">
-            <div className="_layout_swithing_btn_round"></div>
+    <div className={`_layout _layout_main_wrapper`}>
+      <div className="_layout_mode_switching_btn">
+        <button type="button" className="_layout_switching_btn_link" onClick={() => setIsDark(d => !d)}>
+          <div className="_layout_switching_btn">
+            <div className="_layout_switching_btn_round"></div>
           </div>
-          {/* Your dark/light mode SVGs */}
         </button>
       </div>
 
@@ -133,30 +241,66 @@ export default function Feed() {
                   <div className="_layout_middle_inner">
                     <StoriesDesktop />
                     <StoriesMobile />
+
                     <Composer onPostCreated={handlePostCreated} />
 
-                    {posts.map(post => (
-                      <TimelinePost
-                        key={post.id}
-                        post={post}
-                        onPostUpdate={handlePostUpdate}
-                        onPostDelete={handlePostDelete}
-                      />
-                    ))}
-
-                    {/* Loader */}
-                    {loading && posts.length > 0 && (
-                      <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-                        Loading more posts...
+                    {/* Error / Empty / Loading states */}
+                    {isError && (
+                      <div style={{ textAlign: 'center', padding: 16 }}>
+                        <div>Failed to load posts.</div>
+                        <button onClick={() => refetch()}>Retry</button>
                       </div>
+                    )}
+
+                    {!isLoading && posts.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: 16 }}>
+                        No posts yet — start the conversation!
+                      </div>
+                    )}
+
+                    {/* Virtualized list via Virtuoso. It accepts the flattened items array. */}
+                    <div style={{ height: 'calc(100vh - 220px)' }}>
+                      <Virtuoso
+                        data={posts}
+                        overscan={200}
+                        itemContent={(index, post: Post) => (
+                          <TimelinePost
+                            key={post.id}
+                            post={post}
+                            onPostUpdate={handlePostUpdate}
+                            onPostDelete={handlePostDelete}
+                            onToggleLike={handleToggleLike}
+                          />
+                        )}
+                      />
+                    </div>
+
+                    {/* Loading indicator for pagination */}
+                    {isFetchingNextPage && posts.length > 0 && (
+                      <div style={{ textAlign: 'center', padding: '12px 0' }}>Loading more posts...</div>
                     )}
 
                     {/* No more posts message */}
-                    {!hasMore && posts.length > 0 && (
-                      <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-                        No more posts to load
+                    {!hasNextPage && posts.length > 0 && (
+                      <div style={{ textAlign: 'center', padding: '12px 0', color: '#666' }}>No more posts to load</div>
+                    )}
+
+                    {/* Sentinel for IntersectionObserver (prefetch / fetch next page). It's placed after the list. */}
+                    <div ref={sentinelRef} style={{ height: 1 }} aria-hidden="true" />
+
+                    {/* Initial skeletons while loading first page */}
+                    {isLoading && (
+                      <div>
+                        {/* simple skeletons */}
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div key={i} style={{ padding: 12 }}>
+                            <div style={{ height: 12, background: '#eee', marginBottom: 8, width: '40%' }} />
+                            <div style={{ height: 200, background: '#f6f6f6' }} />
+                          </div>
+                        ))}
                       </div>
                     )}
+
                   </div>
                 </div>
               </div>
