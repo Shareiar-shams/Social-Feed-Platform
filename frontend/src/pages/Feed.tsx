@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useCallback, useState } from 'react';
+import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Virtuoso } from 'react-virtuoso';
 import {
@@ -65,7 +65,6 @@ export default function Feed() {
     data,
     isLoading,
     isError,
-    error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -73,6 +72,7 @@ export default function Feed() {
   } = useInfiniteQuery({
     queryKey,
     queryFn: fetchPosts,
+    initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       // page-based API -> compute next page
       if (lastPage.current_page < lastPage.last_page) return lastPage.current_page + 1;
@@ -124,16 +124,6 @@ export default function Feed() {
   // -------------------------
   // Cache helpers for optimistic updates
   // -------------------------
-  const optimisticUpdatePost = useCallback((postId: number, updater: (p: Post) => Post) => {
-    queryClient.setQueryData(queryKey, (old: any) => {
-      if (!old) return old;
-      return {
-        ...old,
-        pages: updatePostInPages(old.pages, (p: Post) => p.id === postId, updater),
-      };
-    });
-  }, [queryClient]);
-
   const replacePostInCache = useCallback((newPost: Post) => {
     queryClient.setQueryData(queryKey, (old: any) => {
       if (!old) return old;
@@ -187,29 +177,6 @@ export default function Feed() {
     removePostFromCache(postId);
   }, [removePostFromCache]);
 
-  // Example optimistic like toggle handler (TimelinePost may call this)
-  const handleToggleLike = useCallback(async (postId: number, liked: boolean) => {
-    // optimistic
-    optimisticUpdatePost(postId, (p) => ({
-      ...p,
-      is_liked: liked,
-      like_count: liked ? (p.like_count + 1) : Math.max(0, p.like_count - 1),
-    }));
-
-    try {
-      // call service
-      await postService.toggleLike(postId, liked);
-      // optionally refetch that single post or rely on server push
-    } catch (err) {
-      // rollback on error
-      optimisticUpdatePost(postId, (p) => ({
-        ...p,
-        is_liked: !liked,
-        like_count: !liked ? (p.like_count + 1) : Math.max(0, p.like_count - 1),
-      }));
-      console.error('Like toggle failed', err);
-    }
-  }, [optimisticUpdatePost]);
 
   // -------------------------
   // Rendering
@@ -263,13 +230,12 @@ export default function Feed() {
                       <Virtuoso
                         data={posts}
                         overscan={200}
-                        itemContent={(index, post: Post) => (
+                        itemContent={(_, post: Post) => (
                           <TimelinePost
                             key={post.id}
                             post={post}
                             onPostUpdate={handlePostUpdate}
                             onPostDelete={handlePostDelete}
-                            onToggleLike={handleToggleLike}
                           />
                         )}
                       />
