@@ -35,7 +35,9 @@ trait PostScopes
     public function scopeWithPostRelations($query)
     {
         return $query
-            ->with(['user', 'likes.user'])
-            ->withCount('likes');
+            ->with(['user' => function ($q) {
+                $q->select('id', 'first_name', 'last_name');
+            }])
+            ->withCount('likes', 'comments');
     }
 }
