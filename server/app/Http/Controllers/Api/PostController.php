@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Post\PostCreateRequest;
 use App\Http\Requests\Post\PostUpdateRequest;
+use App\Http\Resources\Post\PostResource;
 use App\Services\PostService;
 use Illuminate\Http\Request;
 
@@ -26,7 +27,7 @@ class PostController extends Controller
 
         $posts = $this->postService->showAllPosts($request, $perPage);
 
-        return response()->json($posts);
+        return PostResource::collection($posts);
     }
 
     /**
